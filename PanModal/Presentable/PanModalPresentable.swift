@@ -141,6 +141,13 @@ public protocol PanModalPresentable: AnyObject {
      Default value is true.
      */
     var allowsTapToDismiss: Bool { get }
+    
+    /**
+     A flag to determine if touches should pass through dimmed background view
+     
+     Default value is false
+     */
+    var passesTouchesThroughDimmedView: Bool { get }
 
     /**
      A flag to toggle user interactions on the container view.

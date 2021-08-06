@@ -40,7 +40,10 @@ public class DimmedView: UIView {
             }
         }
     }
-
+    
+    var passesTouchesThrough: Bool = false
+    weak var passthroughView: UIView?
+    
     /**
      The closure to be executed when a tap occurs
      */
@@ -64,6 +67,18 @@ public class DimmedView: UIView {
 
     required public init?(coder aDecoder: NSCoder) {
         fatalError()
+    }
+    
+    // MARK: - Overrides
+    
+    public override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
+        let view = super.hitTest(point, with: event)
+        guard view === self,
+              passesTouchesThrough,
+              let point = passthroughView?.convert(point, from: self) else {
+            return view
+        }
+        return passthroughView?.hitTest(point, with: event)
     }
 
     // MARK: - Event Handlers

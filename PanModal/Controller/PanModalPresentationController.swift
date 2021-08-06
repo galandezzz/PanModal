@@ -111,6 +111,8 @@ open class PanModalPresentationController: UIPresentationController {
         } else {
             view = DimmedView()
         }
+        view.passesTouchesThrough = presentable?.passesTouchesThroughDimmedView ?? false
+        view.passthroughView = presentingViewController.view
         view.didTap = { [weak self] _ in
             if self?.presentable?.allowsTapToDismiss == true {
                 self?.presentedViewController.dismiss(animated: true)
