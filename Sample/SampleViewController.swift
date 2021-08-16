@@ -10,6 +10,8 @@ import UIKit
 
 class SampleViewController: UITableViewController {
 
+    private var childPanModal: PanModalPresentable.LayoutType?
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         setupView()
@@ -53,8 +55,24 @@ class SampleViewController: UITableViewController {
         guard let rowType = RowType(rawValue: indexPath.row) else {
             return
         }
-        dismiss(animated: true, completion: nil)
-        presentPanModal(rowType.presentable.rowVC)
+        
+        let showHandler: () -> Void
+        if rowType == .child {
+            showHandler = {
+                let vc = rowType.presentable.rowVC
+                self.childPanModal = vc
+                self.addPanModalChild(vc, animated: true)
+            }
+        } else {
+            showHandler = { self.presentPanModal(rowType.presentable.rowVC) }
+        }
+        
+        if let childPanModal = childPanModal {
+            self.childPanModal = nil
+            childPanModal.removePanModalFromParent(animated: true, completion: showHandler)
+        } else {
+            dismiss(animated: true, completion: showHandler)
+        }
     }
 }
 
@@ -66,6 +84,7 @@ protocol RowPresentable {
 private extension SampleViewController {
 
     enum RowType: Int, CaseIterable {
+        case child
         case basic
         case fullScreen
         case alert
@@ -77,6 +96,7 @@ private extension SampleViewController {
 
         var presentable: RowPresentable {
             switch self {
+            case .child: return Child()
             case .basic: return Basic()
             case .fullScreen: return FullScreen()
             case .alert: return Alert()
@@ -87,6 +107,11 @@ private extension SampleViewController {
             }
         }
 
+        struct Child: RowPresentable {
+            let string: String = "Child"
+            let rowVC: PanModalPresentable.LayoutType = BasicViewController()
+        }
+        
         struct Basic: RowPresentable {
             let string: String = "Basic"
             let rowVC: PanModalPresentable.LayoutType = BasicViewController()

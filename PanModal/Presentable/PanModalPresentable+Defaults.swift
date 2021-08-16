@@ -109,7 +109,7 @@ public extension PanModalPresentable where Self: UIViewController {
 
     }
 
-    func shouldTransition(to state: PanModalPresentationController.PresentationState) -> Bool {
+    func shouldTransition(to state: PanModalPresentationState) -> Bool {
         return true
     }
 
@@ -117,7 +117,7 @@ public extension PanModalPresentable where Self: UIViewController {
         return false
     }
 
-    func willTransition(to state: PanModalPresentationController.PresentationState) {
+    func willTransition(to state: PanModalPresentationState) {
 
     }
 

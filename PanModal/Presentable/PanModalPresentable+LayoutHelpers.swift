@@ -18,8 +18,9 @@ extension PanModalPresentable where Self: UIViewController {
      Cast the presentation controller to PanModalPresentationController
      so we can access PanModalPresentationController properties and methods
      */
-    var presentedVC: PanModalPresentationController? {
-        return presentationController as? PanModalPresentationController
+    var presentedVC: PanModalCommonPresentationController? {
+        (presentationController as? PanModalPresentationController)?.controller
+            ?? (parent as? PanModalChildTransitionController)?.controller
     }
 
     /**

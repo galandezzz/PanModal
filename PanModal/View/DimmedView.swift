@@ -8,10 +8,28 @@
 #if os(iOS)
 import UIKit
 
+public class TouchForwardingView: UIView {
+    public var passthroughViews: [UIView] = []
+    
+    override public func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
+        guard let hitView = super.hitTest(point, with: event) else { return nil }
+        guard hitView === self else { return hitView }
+        
+        for passthroughView in passthroughViews {
+            let point = convert(point, to: passthroughView)
+            if let passthroughHitView = passthroughView.hitTest(point, with: event) {
+                return passthroughHitView
+            }
+        }
+         
+        return self
+    }
+}
+
 /**
  A dim view for use as an overlay over content you want dimmed.
  */
-public class DimmedView: UIView {
+public class DimmedView: TouchForwardingView {
 
     /**
      Represents the possible states of the dimmed view.
@@ -41,9 +59,6 @@ public class DimmedView: UIView {
         }
     }
     
-    var passesTouchesThrough: Bool = false
-    weak var passthroughView: UIView?
-    
     /**
      The closure to be executed when a tap occurs
      */
@@ -67,18 +82,6 @@ public class DimmedView: UIView {
 
     required public init?(coder aDecoder: NSCoder) {
         fatalError()
-    }
-    
-    // MARK: - Overrides
-    
-    public override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
-        let view = super.hitTest(point, with: event)
-        guard view === self,
-              passesTouchesThrough,
-              let point = passthroughView?.convert(point, from: self) else {
-            return view
-        }
-        return passthroughView?.hitTest(point, with: event)
     }
 
     // MARK: - Event Handlers
