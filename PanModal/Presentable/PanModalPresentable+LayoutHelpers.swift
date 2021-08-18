@@ -30,7 +30,7 @@ extension PanModalPresentable where Self: UIViewController {
     var topLayoutOffset: CGFloat {
 
         guard let rootVC = rootViewController
-            else { return 0}
+            else { return 0 }
 
         if #available(iOS 11.0, *) { return rootVC.view.safeAreaInsets.top } else { return rootVC.topLayoutGuide.length }
     }
@@ -42,22 +42,15 @@ extension PanModalPresentable where Self: UIViewController {
     var bottomLayoutOffset: CGFloat {
 
        guard let rootVC = rootViewController
-            else { return 0}
+            else { return 0 }
 
         if #available(iOS 11.0, *) { return rootVC.view.safeAreaInsets.bottom } else { return rootVC.bottomLayoutGuide.length }
     }
 
     /**
      Returns the short form Y position
-
-     - Note: If voiceover is on, the `longFormYPos` is returned.
-     We do not support short form when voiceover is on as it would make it difficult for user to navigate.
      */
     var shortFormYPos: CGFloat {
-
-        guard !UIAccessibility.isVoiceOverRunning
-            else { return longFormYPos }
-
         let shortFormYPos = topMargin(from: shortFormHeight) + topOffset
 
         // shortForm shouldn't exceed longForm
@@ -110,11 +103,7 @@ extension PanModalPresentable where Self: UIViewController {
     }
 
     private var rootViewController: UIViewController? {
-
-        guard let application = UIApplication.value(forKeyPath: #keyPath(UIApplication.shared)) as? UIApplication
-            else { return nil }
-
-        return application.keyWindow?.rootViewController
+        return UIApplication.shared.keyWindow?.rootViewController
     }
 
 }

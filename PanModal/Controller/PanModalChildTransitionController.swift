@@ -8,7 +8,7 @@ final class PanModalChildTransitionController: UIViewController {
         
         panModal.modalPresentationStyle = .custom
         panModal.modalPresentationCapturesStatusBarAppearance = true
-        panModal.transitioningDelegate = PanModalPresentationDelegate.default
+        panModal.transitioningDelegate = PanModalPresentationDelegate.child
         
         super.init(nibName: nil, bundle: nil)
     }
@@ -39,42 +39,56 @@ final class PanModalChildTransitionController: UIViewController {
     
     func attach(to parent: UIViewController, animated: Bool, completion: (() -> Void)?) {
         parent.addChild(self)
+        view.frame = parent.view.bounds
+        view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         parent.view.addSubview(view)
-        NSLayoutConstraint.activate([
-            view.topAnchor.constraint(equalTo: parent.view.topAnchor),
-            view.leftAnchor.constraint(equalTo: parent.view.leftAnchor),
-            view.bottomAnchor.constraint(equalTo: parent.view.bottomAnchor),
-            view.rightAnchor.constraint(equalTo: parent.view.rightAnchor),
-        ])
         didMove(toParent: parent)
-                    
-        parent.present(fakeBottomSheet, animated: true) {
+        
+        parent.present(fakeBottomSheet, animated: animated) {
             self.fakeBottomSheet.dismiss(animated: false)
         }
         
         let transitionContext = TransitionContext(
+            animated: animated,
             containerView: view,
             fromViewController: parent,
             toViewController: panModal
         )
         
         addChild(panModal)
-        panModal.beginAppearanceTransition(true, animated: true)
+        panModal.beginAppearanceTransition(true, animated: animated)
         
         controller.presentationTransitionWillBegin()
         
-        panModal.transitioningDelegate?
-            .animationController?(forPresented: panModal, presenting: parent, source: parent)?
-            .animateTransition(using: transitionContext)
+        let animation: () -> Void = {
+            self.panModal.transitioningDelegate?
+                .animationController?(forPresented: self.panModal, presenting: parent, source: parent)?
+                .animateTransition(using: transitionContext)
+        }
         
-        fakeBottomSheet.transitionCoordinator?.animate(alongsideTransition: nil, completion: { context in
-            self.controller.presentationTransitionDidEnd(!context.isCancelled)
+        if animated {
+            animation()
+        } else {
+            UIView.performWithoutAnimation(animation)
+        }
+        
+        let completion: (Bool) -> Void = { completed in
+            self.controller.presentationTransitionDidEnd(completed)
             
-            if !context.isCancelled {
+            if completed {
                 self.panModal.endAppearanceTransition()
                 self.panModal.didMove(toParent: self)
             }
-        })
+            
+            completion?()
+        }
+        if let coordinator = fakeBottomSheet.transitionCoordinator {
+            coordinator.animate(alongsideTransition: nil) { context in
+                completion(!context.isCancelled)
+            }
+        } else {
+            completion(true)
+        }
     }
     
     override func loadView() {
@@ -107,14 +121,23 @@ final class PanModalChildTransitionController: UIViewController {
                 self.controller.dismissalTransitionWillBegin()
                 
                 let transitionContext = TransitionContext(
+                    animated: flag,
                     containerView: self.view,
                     fromViewController: self.panModal,
                     toViewController: self.parent ?? self
                 )
                 
-                self.panModal.transitioningDelegate?
-                    .animationController?(forDismissed: self.panModal)?
-                    .animateTransition(using: transitionContext)
+                let animation: () -> Void = {
+                    self.panModal.transitioningDelegate?
+                        .animationController?(forDismissed: self.panModal)?
+                        .animateTransition(using: transitionContext)
+                }
+                
+                if flag {
+                    animation()
+                } else {
+                    UIView.performWithoutAnimation(animation)
+                }
                 
                 let completion: (Bool) -> Void = { completed in
                     self.controller.dismissalTransitionDidEnd(completed)
@@ -186,7 +209,7 @@ private final class TouchPassView: UIView {
 
 private final class TransitionContext: NSObject, UIViewControllerContextTransitioning {
     let containerView: UIView
-    let isAnimated: Bool = true
+    let isAnimated: Bool
     let isInteractive: Bool = false
     let transitionWasCancelled: Bool = false
     let presentationStyle: UIModalPresentationStyle = .custom
@@ -232,7 +255,8 @@ private final class TransitionContext: NSObject, UIViewControllerContextTransiti
         return .zero
     }
     
-    init(containerView: UIView, fromViewController: UIViewController, toViewController: UIViewController) {
+    init(animated: Bool, containerView: UIView, fromViewController: UIViewController, toViewController: UIViewController) {
+        self.isAnimated = animated
         self.containerView = containerView
         self.fromViewController = fromViewController
         self.toViewController = toViewController
