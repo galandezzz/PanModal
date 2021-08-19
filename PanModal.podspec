@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'PanModal'
-  s.version          = '1.2.10'
+  s.version          = '1.2.11'
   s.summary          = 'PanModal is an elegant and highly customizable presentation API for constructing bottom sheet modals on iOS.'
   s.description      = 'PanModal is an elegant and highly customizable presentation API for constructing bottom sheet modals on iOS.'
   s.homepage         = 'https://github.com/galandezzz/PanModal'
